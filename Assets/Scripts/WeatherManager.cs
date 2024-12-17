@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class WeatherManager : MonoBehaviour
 {
@@ -6,36 +7,53 @@ public class WeatherManager : MonoBehaviour
     public ParticleSystem snowEffect;
     public ParticleSystem stormEffect;
 
-    public Light directionalLight; // Lumière principale pour le jour/nuit
-    public float dayDuration = 20f; // Durée totale d'une journée (en secondes)
+    // Skybox materials
+    public Material daySkybox;
+    public Material eveningSkybox;
+    public Material nightSkybox;
 
+    // Timer pour la météo
     private int currentWeatherIndex = 0;
     private float weatherTimer = 0f;
-    private float lightTimer = 0f;
+
+    // Timer pour changer la Skybox
+    private float skyboxTimer = 0f;
+    private float skyboxChangeInterval = 5f; // Changement toutes les 5 secondes
+
+    private int currentSkyboxIndex = 0; // 0 = jour, 1 = soir, 2 = nuit
 
     private void Start()
     {
-        // Désactive tous les effets au début
+        // Désactiver tous les effets au début
         DisableAllEffects();
+
+        // Définir la Skybox initiale
+        RenderSettings.skybox = daySkybox;
+        DynamicGI.UpdateEnvironment(); // Mettre à jour l'éclairage global
     }
 
     private void Update()
     {
-        // Gère le changement de météo toutes les 5 secondes
+        // Gestion du changement de météo toutes les 5 secondes
         weatherTimer += Time.deltaTime;
-        if (weatherTimer >= 5f) // Toutes les 5 secondes
+        if (weatherTimer >= 5f)
         {
             ChangeWeather();
             weatherTimer = 0f;
         }
 
-        // Gère le cycle de jour/nuit
-        UpdateDayNightCycle();
+        // Gestion du changement de Skybox toutes les 5 secondes
+        skyboxTimer += Time.deltaTime;
+        if (skyboxTimer >= skyboxChangeInterval)
+        {
+            ChangeSkybox();
+            skyboxTimer = 0f;
+        }
     }
 
     public void ChangeWeather()
     {
-        currentWeatherIndex = (currentWeatherIndex + 1) % 4; // 4 états : rien, pluie, neige, tempête
+        currentWeatherIndex = (currentWeatherIndex + 1) % 4; // 4 états : clair, pluie, neige, tempête
         DisableAllEffects();
 
         switch (currentWeatherIndex)
@@ -58,29 +76,27 @@ public class WeatherManager : MonoBehaviour
         }
     }
 
-    void UpdateDayNightCycle()
+    void ChangeSkybox()
     {
-        // Avancement du temps pour le cycle jour/nuit
-        lightTimer += Time.deltaTime;
+        currentSkyboxIndex = (currentSkyboxIndex + 1) % 3; // 3 états : jour, soirée, nuit
 
-        // Normaliser le temps (0 à 1 pour une journée complète)
-        float normalizedTime = (lightTimer % dayDuration) / dayDuration;
-
-        // Calcul de l'angle de la lumière directionnelle (simule la position du soleil)
-        float sunAngle = Mathf.Lerp(-90f, 270f, normalizedTime); // -90° à 270° pour un cycle complet
-        directionalLight.transform.rotation = Quaternion.Euler(sunAngle, 0f, 0f);
-
-        // Ajustement de l'intensité et de la couleur selon l'heure de la journée
-        if (normalizedTime <= 0.25f || normalizedTime >= 0.75f) // Nuit
+        switch (currentSkyboxIndex)
         {
-            directionalLight.intensity = Mathf.Lerp(0.2f, 0.5f, Mathf.PingPong(normalizedTime * 4, 1));
-            directionalLight.color = Color.Lerp(Color.blue * 0.5f, Color.black, 0.5f);
+            case 0:
+                RenderSettings.skybox = daySkybox;
+                Debug.Log("Skybox: Day");
+                break;
+            case 1:
+                RenderSettings.skybox = eveningSkybox;
+                Debug.Log("Skybox: Evening");
+                break;
+            case 2:
+                RenderSettings.skybox = nightSkybox;
+                Debug.Log("Skybox: Night");
+                break;
         }
-        else // Jour
-        {
-            directionalLight.intensity = Mathf.Lerp(0.5f, 1.2f, Mathf.PingPong(normalizedTime * 4, 1));
-            directionalLight.color = Color.Lerp(Color.yellow, Color.white, 0.5f);
-        }
+
+        DynamicGI.UpdateEnvironment(); // Mettre à jour l'éclairage pour que le changement soit visible
     }
 
     void DisableAllEffects()
@@ -90,3 +106,4 @@ public class WeatherManager : MonoBehaviour
         stormEffect.Stop();
     }
 }
+
