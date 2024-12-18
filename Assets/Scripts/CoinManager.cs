@@ -12,7 +12,7 @@ public class CoinManager : MonoBehaviour
     [Header("Game State Management")]
     [Tooltip("Text displaying the coins collected")] public TextMeshProUGUI coinText;
 
-    private float spawnDistance = 200f; // Distance ahead to spawn coins
+    private float spawnDistance = 300f; // Distance ahead to spawn coins
 
     private void Awake()
     {
@@ -38,8 +38,8 @@ public class CoinManager : MonoBehaviour
     {
         // Randomize position
         Vector3 spawnPosition = player.position + player.forward * spawnDistance;
-        spawnPosition.x += Random.Range(-5f, 5f); // Randomize left/right
-        spawnPosition.y += Random.Range(20f, 40f);   // Randomize height
+        spawnPosition.x += Random.Range(-2f, 3f); // Randomize left/right
+        spawnPosition.y = player.position.y+60;   // Randomize height
 
         Instantiate(coinPrefab, spawnPosition, Quaternion.identity);
     }
