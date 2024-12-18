@@ -1,6 +1,10 @@
 ﻿﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
+using TMPro;
+using UnityEngine.UI;
+
 
 namespace MFlight.Demo
 {
@@ -56,6 +60,16 @@ namespace MFlight.Demo
         [Tooltip("Extra drag from airbrakes")] public float airbrakeDrag;
         [Tooltip("Extra drag from flaps")] public float flapsDrag;
         [Tooltip("Angular drag coefficients")] public Vector3 angularDrag;
+
+        [Header("Game State Management")]
+        [Tooltip("Text displaying the remaining time")] public TextMeshProUGUI timeText;
+
+        [Header("Health (Hearts) Management")]
+        [Tooltip("Full heart sprite")] public Sprite fullHeart; 
+        [Tooltip("Empty heart sprite")] public Sprite emptyHeart; 
+        [Tooltip("Heart prefab")] public GameObject heartPrefab;
+        [Tooltip("Heart container")] public Transform heartContainer;
+
         
          // --------------------------------------------------
         // Private Fields
@@ -66,6 +80,12 @@ namespace MFlight.Demo
         private bool pitchOverride = false;
         private bool Dead = false;
         private float flapsRetractSpeed = 2.0f;
+        private float score ;
+        private float time = 180.0f;
+        private int maxHearts = 5; 
+        private int currentHearts = 0; 
+        private List<Image> heartImages = new List<Image>();
+
 
         // State variables
         private Vector3 Velocity;
@@ -79,7 +99,6 @@ namespace MFlight.Demo
         // Deployable states
         public bool AirbrakeDeployed = false;
         public bool FlapsDeployed = false;
-
         // --------------------------------------------------
         // Public Properties
         // --------------------------------------------------
@@ -105,19 +124,21 @@ namespace MFlight.Demo
             if (controller == null)
                 Debug.LogError(name + ": Plane - Missing reference to MouseFlightController!");
 
+            UpdateTime();
+            InitializeHearts();
+            UpdateHeartsDisplay();
         }
 
         /// <summary>
-        /// Unity Update method. Called once per frame to handle the player's input.
+        /// Unity Update method. Handles player input and checks the state of the game.
         /// </summary>
         /// <remarks>
-        /// This method processes user input every frame, allowing for real-time 
-        /// control adjustments and interaction with the plane's systems.
+        /// Called once per frame. Updates input and checks if the game is over.
         /// </remarks>
-
         private void Update()
         {
             HandlePlayerInput();
+            checkState();
         }
 
         /// <summary>
@@ -152,7 +173,144 @@ namespace MFlight.Demo
             CalculateState(dt);
         }
 
+        /// <summary>
+        /// Unity OnTriggerEnter method. Triggers when the plane collides with another game object.
+        /// If the other game object is a medical kit and the plane does not already have its maximum
+        /// number of hearts, it increments the number of hearts and updates the display.
+        /// </summary>
+        /// <param name="other">The other game object that the plane collided with.</param>
+        /// <remarks>
+        /// This method is called when the plane collides with another game object, and is useful for
+        /// handling events that should occur when the plane collects items or interacts with other
+        /// objects in the game world.
+        private void OnTriggerEnter(Collider other)
+        {
+            if (other.gameObject.CompareTag("medical kit"))
+            {
+                if (currentHearts < maxHearts) 
+                {
+                    currentHearts++;
+                    UpdateHeartsDisplay();
+                    Destroy(other.gameObject); 
+                }
+            }
+        }
 
+       
+        /// <summary>
+        /// Checks the state of the game and updates the time and status of the game.
+        /// </summary>
+        /// <remarks>
+        /// This method is called every frame and checks the time left and the player's
+        /// status. If the time is greater than 0 and the player is not dead, it updates
+        /// the time and checks for a win condition. If the time is 0 or the player is
+        /// dead, it ends the game and restarts it.
+        /// </remarks>
+        private void checkState() {
+            if (time > 0 && !Dead) 
+            {
+                time -= Time.deltaTime; 
+                UpdateTime();
+                Win();
+
+            } 
+            else
+            {
+                time = 0; 
+                GameOver();
+            }
+        }
+
+        /// <summary>
+        /// Updates the time display by setting the <see cref="TextMeshProUGUI.text"/> property of the 
+        /// <see cref="timeText"/> to a formatted string showing the remaining time.
+        /// </summary>
+        private void UpdateTime() {
+            timeText.text = $"Time: {Mathf.CeilToInt(time)}";
+        }
+
+        /// <summary>
+        /// Handles the winning state by checking if the player has reached the maximum amount of hearts and loading the next level.
+        /// </summary>
+        /// <remarks>
+        /// This method is called in the game loop and checks if the <see cref="currentHearts"/> is equal to the <see cref="maxHearts"/>.
+        /// If the conditions are met, the method loads the next scene using <see cref="SceneManager.LoadScene(int)"/> and logs a message to the console.
+        /// </remarks>
+        private void Win() {
+            if (currentHearts == maxHearts) 
+            {
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1); 
+            }
+        }
+
+        /// <summary>
+        /// Handles the game over state by marking the plane as "dead", logging a message,
+        /// and reloading the previous scene.
+        /// </summary>
+        /// <remarks>
+        /// This method is called when the player's time runs out and the game is over.
+        /// It sets the Dead flag to true, logs a message to the console, and reloads the
+        /// previous scene to restart the game.
+        /// </remarks>
+        private void GameOver()
+        {
+            Dead = true; // Marque l'état de l'avion comme "mort"
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex-1);
+            
+        }
+        
+        // --------------------------------------------------
+        // Heart Management
+        // --------------------------------------------------
+
+        /// <summary>
+        /// Initializes the heart display by clearing any existing heart objects
+        /// and instantiating a new set of heart objects based on the maximum number of hearts.
+        /// </summary>
+        /// <remarks>
+        /// This method removes all current heart GameObjects from their container,
+        /// clears the list of heart images, and then creates and adds new heart images
+        /// to the list and their container.
+        /// </remarks>
+
+        void InitializeHearts()
+        {
+            foreach (Transform child in heartContainer)
+            {
+                Destroy(child.gameObject);
+            }
+            heartImages.Clear();
+
+            for (int i = 0; i < maxHearts; i++)
+            {
+                GameObject heart = Instantiate(heartPrefab, heartContainer);
+                Image heartImage = heart.GetComponent<Image>();
+                heartImages.Add(heartImage);
+            }
+        }
+
+        /// <summary>
+        /// Updates the heart display to reflect the current number of hearts by filling or emptying
+        /// the heart images in the heart container.
+        /// </summary>
+        /// <remarks>
+        /// This method iterates over the list of heart images and sets the sprite of each heart
+        /// image to either a full or empty heart sprite, depending on whether the current heart
+        /// count is greater than or less than the maximum number of hearts.
+        private void UpdateHeartsDisplay()
+        {
+            for (int i = 0; i < maxHearts; i++)
+            {
+                if (i < currentHearts)
+                {
+                    heartImages[i].sprite = fullHeart; // Cœurs remplis
+                }
+                else
+                {
+                    heartImages[i].sprite = emptyHeart; // Cœurs vides
+                }
+            }
+        }
         // --------------------------------------------------
         // Input Handling
         // --------------------------------------------------
@@ -476,8 +634,6 @@ namespace MFlight.Demo
 
         }
 
-       
-        
         // --------------------------------------------------
         // Drag and Other Forces
         // --------------------------------------------------
@@ -530,6 +686,6 @@ namespace MFlight.Demo
                 FlapsDeployed = false;
             }
         }
-    
+
     }
 }
