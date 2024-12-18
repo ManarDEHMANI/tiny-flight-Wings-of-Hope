@@ -1,4 +1,6 @@
 using UnityEngine;
+using TMPro;
+using UnityEngine.UI;
 
 public class CoinManager : MonoBehaviour
 {
@@ -7,9 +9,10 @@ public class CoinManager : MonoBehaviour
     public int coinCount = 0;
     public GameObject coinPrefab;
     public Transform player; // The plane
-    public WeatherManager weatherManager;
+    [Header("Game State Management")]
+    [Tooltip("Text displaying the coins collected")] public TextMeshProUGUI coinText;
 
-    private float spawnDistance = 50f; // Distance ahead to spawn coins
+    private float spawnDistance = 200f; // Distance ahead to spawn coins
 
     private void Awake()
     {
@@ -18,6 +21,7 @@ public class CoinManager : MonoBehaviour
 
     private void Start()
     {
+        Debug.Log("Coins Started");
         // Start spawning coins dynamically
         InvokeRepeating("SpawnCoin", 1f, 2f);
         
@@ -27,19 +31,15 @@ public class CoinManager : MonoBehaviour
     {
         coinCount++;
         Debug.Log("Coins Collected: " + coinCount);
-
-        if (coinCount % 5 == 0) // Change weather every 5 coins
-        {
-            weatherManager.ChangeWeather();
-        }
+        coinText.text = $"Kits: {coinCount}";
     }
 
     void SpawnCoin()
     {
         // Randomize position
         Vector3 spawnPosition = player.position + player.forward * spawnDistance;
-        spawnPosition.x += Random.Range(-10f, 10f); // Randomize left/right
-        spawnPosition.y += Random.Range(-2f, 5f);   // Randomize height
+        spawnPosition.x += Random.Range(-5f, 5f); // Randomize left/right
+        spawnPosition.y += Random.Range(20f, 40f);   // Randomize height
 
         Instantiate(coinPrefab, spawnPosition, Quaternion.identity);
     }

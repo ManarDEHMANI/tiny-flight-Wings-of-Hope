@@ -1,4 +1,4 @@
-﻿﻿using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
@@ -82,7 +82,7 @@ namespace MFlight.Demo
         private bool Dead = false;
         private float flapsRetractSpeed = 2.0f;
         private float score ;
-        private float time = 3.0f;
+        private float time = 180.0f;
         private int maxHearts = 5; 
         private int currentHearts = 0; 
         private List<Image> heartImages = new List<Image>();
