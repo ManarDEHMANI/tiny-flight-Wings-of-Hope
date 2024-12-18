@@ -63,6 +63,7 @@ namespace MFlight.Demo
 
         [Header("Game State Management")]
         [Tooltip("Text displaying the remaining time")] public TextMeshProUGUI timeText;
+        //[Tooltip("Restart menu prefab")] public GameObject restartMenuPrefab;
 
         [Header("Health (Hearts) Management")]
         [Tooltip("Full heart sprite")] public Sprite fullHeart; 
@@ -81,7 +82,7 @@ namespace MFlight.Demo
         private bool Dead = false;
         private float flapsRetractSpeed = 2.0f;
         private float score ;
-        private float time = 180.0f;
+        private float time = 3.0f;
         private int maxHearts = 5; 
         private int currentHearts = 0; 
         private List<Image> heartImages = new List<Image>();
@@ -118,7 +119,18 @@ namespace MFlight.Demo
         /// Called once when the script instance is being loaded.
         /// </remarks>
         private void Awake()
-        {
+        {   
+            if (PlayerPrefs.GetInt("ShowRestartMenu", 0) == 1)
+            {
+                GameObject restartMenu = GameObject.Find("Restart Menu"); 
+                if (restartMenu != null)
+                {
+                    restartMenu.SetActive(true);
+                }
+
+                PlayerPrefs.SetInt("ShowRestartMenu", 0);
+            }
+            
             rigid = GetComponent<Rigidbody>();
 
             if (controller == null)
@@ -160,12 +172,16 @@ namespace MFlight.Demo
             CalculateState(dt);
             CalculateAngleOfAttack();
             CalculateGForce(dt);
-            
             // Updates and physics
             UpdateFlaps();
-            UpdateThrust();
-            UpdateLift();
-            UpdateSteering(dt);
+
+            if (!Dead) {
+                //apply updates
+                UpdateThrust();
+                UpdateLift();
+                UpdateSteering(dt);
+            }
+
             UpdateDrag();
             UpdateAngularDrag();
 
@@ -254,9 +270,9 @@ namespace MFlight.Demo
         /// </remarks>
         private void GameOver()
         {
-            Dead = true; // Marque l'état de l'avion comme "mort"
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex-1);
-            
+            Dead = true; 
+            PlayerPrefs.SetInt("ShowRestartMenu", 1);
+            SceneManager.LoadScene("Main Menu");
         }
         
         // --------------------------------------------------
