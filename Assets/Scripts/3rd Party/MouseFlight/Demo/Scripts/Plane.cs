@@ -120,17 +120,6 @@ namespace MFlight.Demo
         /// </remarks>
         private void Awake()
         {   
-            if (PlayerPrefs.GetInt("ShowRestartMenu", 0) == 1)
-            {
-                GameObject restartMenu = GameObject.Find("Restart Menu"); 
-                if (restartMenu != null)
-                {
-                    restartMenu.SetActive(true);
-                }
-
-                PlayerPrefs.SetInt("ShowRestartMenu", 0);
-            }
-            
             rigid = GetComponent<Rigidbody>();
 
             if (controller == null)
@@ -271,8 +260,7 @@ namespace MFlight.Demo
         private void GameOver()
         {
             Dead = true; 
-            PlayerPrefs.SetInt("ShowRestartMenu", 1);
-            SceneManager.LoadScene("Main Menu");
+            SceneManager.LoadScene(3);
         }
         
         // --------------------------------------------------
