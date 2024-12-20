@@ -5,13 +5,26 @@ using UnityEngine.SceneManagement;
 
 public class MainMenu : MonoBehaviour
 {
-    //Load Scene
+
+    /// <summary>
+    /// Loads the next scene in the build index, which should be the game scene.
+    /// </summary>
+    /// <remarks>
+    /// This method is called when the "Play" button is clicked in the main menu.
+    /// </remarks>
     public void PlayGame()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
     }
 
-    //Quit Game
+    
+    /// <summary>
+    /// Quits the game application.
+    /// </summary>
+    /// <remarks>
+    /// If running in the Unity Editor, it stops play mode. Otherwise, it quits the application.
+    /// </remarks>
+
     public void QuitGame()
     {
         #if UNITY_EDITOR
@@ -22,6 +35,9 @@ public class MainMenu : MonoBehaviour
         #endif
     }
 
+    /// <summary>
+    /// Returns to the main menu.
+    /// </summary>
     public void ReturnToMenu()
     {
         SceneManager.LoadScene(0);
