@@ -83,7 +83,7 @@ namespace MFlight.Demo
         private float flapsRetractSpeed = 2.0f;
         private float score ;
         private float time = 180.0f;
-        private int maxHearts = 5; 
+        private int maxHearts = 3; 
         private int currentHearts = 0; 
         private List<Image> heartImages = new List<Image>();
 

@@ -23,7 +23,7 @@ public class CoinManager : MonoBehaviour
     {
         Debug.Log("Coins Started");
         // Start spawning coins dynamically
-        InvokeRepeating("SpawnCoin", 1f, 2f);
+        InvokeRepeating("SpawnCoin", 1f, 0.8f);
         
     }
 
@@ -38,7 +38,7 @@ public class CoinManager : MonoBehaviour
     {
         // Randomize position
         Vector3 spawnPosition = player.position + player.forward * spawnDistance;
-        spawnPosition.x += Random.Range(-2f, 2f); // Randomize left/right
+        spawnPosition.x += Random.Range(-5f, 1f); // Randomize left/right
         spawnPosition.y = 250+Random.Range(-40f,0f);   // Randomize height
 
         Instantiate(coinPrefab, spawnPosition, Quaternion.identity);
